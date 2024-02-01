@@ -51,7 +51,7 @@ Going now to *TradingView*. First the link
 And a chart from that page.
 **还有该页面的图表。**
 
-![!TradingView - Donchian Channels - No](assets/tradingview-donchian-no-breakouts-20240127225252-3qr51fu.png)[https://www.backtrader.com/blog/posts/2019-09-04-donchian-across-platforms/tradingview-donchian-no-breakouts.png](https://www.backtrader.com/blog/posts/2019-09-04-donchian-across-platforms/tradingview-donchian-no-breakouts.png)
+![!TradingView - Donchian Channels - No](https://www.backtrader.com/blog/posts/2019-09-04-donchian-across-platforms/tradingview-donchian-no-breakouts.png)
 
 Even *Investopedia* uses a chart from *TradingView* that shows **no breakout**. Here: [Investopedia - Donchian Channels - https://www.investopedia.com/terms/d/donchianchannels.asp ](https://www.investopedia.com/terms/d/donchianchannels.asp)
 **甚至 Investopedia 也使用来自 TradingView 的图表，该图表无法显示突破。链接如下： Investopedia - Donchian Channels -**  [https://www.investopedia.com/terms/d/donchianchannels.asp](https://www.investopedia.com/terms/d/donchianchannels.asp)
@@ -107,12 +107,12 @@ class DonchianChannels(bt.Indicator):
 Using it with `lookback=-1` a sample chart looks like this (zoomed in)
 `lookback=-1`时，示例图如下所示（已放大）
 
-![!Backtrader - Donchian Channels -](assets/bt-donchian-lookback-1-breakouts-20240127225252-548g6oo.png)[https://www.backtrader.com/blog/posts/2019-09-04-donchian-across-platforms/bt-donchian-lookback-1-breakouts.png](https://www.backtrader.com/blog/posts/2019-09-04-donchian-across-platforms/bt-donchian-lookback-1-breakouts.png)
+![!Backtrader - Donchian Channels -](https://www.backtrader.com/blog/posts/2019-09-04-donchian-across-platforms/bt-donchian-lookback-1-breakouts.png)
 
 One can clearly see the breakouts, whereas there are no breakouts in the `lookback=0` version.
 上图中，我们可以清楚地看到突破，而 在`lookback=0`时无法看到突破，如下图。
 
-![!Backtrader - Donchian Channels -](assets/bt-donchian-lookback-0-no-breakouts-20240127225252-yzqgv7k.png)[https://www.backtrader.com/blog/posts/2019-09-04-donchian-across-platforms/bt-donchian-lookback-0-no-breakouts.png](https://www.backtrader.com/blog/posts/2019-09-04-donchian-across-platforms/bt-donchian-lookback-0-no-breakouts.png)
+![!Backtrader - Donchian Channels -](https://www.backtrader.com/blog/posts/2019-09-04-donchian-across-platforms/bt-donchian-lookback-0-no-breakouts.png)
 
 ## Coding Implications  编码含义
 
