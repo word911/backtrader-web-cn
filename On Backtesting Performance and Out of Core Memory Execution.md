@@ -6,8 +6,8 @@
 
 本文主要是为了回应 [https://redit.com/r/algotrading](https://redit.com/r/algotrading) 最近的两个帖子。
 
-* 其一是质疑Backtrader无法处理160万根K线: [reddit/r/algotrading - A performant backtesting system? ](https://www.reddit.com/r/algotrading/comments/dlfujr/a_performant_backtesting_system/)
-* 另一个询问哪种工具可以回测8000只股票？: [reddit/r/algotrading - Backtesting libs that supports 1000+ stocks?     ](https://www.reddit.com/r/algotrading/comments/dmv51t/backtesting_libs_that_supports_1000_stocks/)  
+* 其一是质疑Backtrader无法处理160万根K线: [reddit/r/algotrading - A performant backtesting system?](https://www.reddit.com/r/algotrading/comments/dlfujr/a_performant_backtesting_system/)
+* 另一个询问哪种工具可以回测8000只股票？: [reddit/r/algotrading - Backtesting libs that supports 1000+ stocks?](https://www.reddit.com/r/algotrading/comments/dmv51t/backtesting_libs_that_supports_1000_stocks/)  
 * 作者想找到一个支持“内核/内存外”的回测框架，“因为数据量巨大，显然无法将所有数据加载到内存中”
 
 本文中，我们将用Backtrader一起解决这些问题
@@ -40,12 +40,12 @@ for i in range(STOCKS):
     df.to_csv('candles{:02d}.csv'.format(i))
 ```
 
-这将生成 100 个文件，从开始的`candles00.csv` ，一直到`candles99.csv` 。实际值并不重要。文件拥有标准 `datetime` 、 `OHLCV` 组件（和 `OpenInterest` ）才是最重要的。
+这将生成 100 个文件，从开始的candles00.csv ，一直到candles99.csv 。实际值并不重要。文件拥有标准 datetime、 OHLCV 组件（和OpenInterest）才是最重要的。
 
 ## 测试系统
 
 * 硬件/操作系统：将使用配备Intel i7和32GB内存的Windows10 15.6 英寸笔记本电脑。
-* Python: CPython `3.6.1` 和 `pypy3 6.0.0`
+* Python: CPython 3.6.1 和 pypy3 6.0.0
 * 其他：测试时，本电脑运行的应用程序占用大约20%的CPU运行时间，这些持续运行的程序大致包括如Chrome（102个进程），Edge，Word，Powerpoint，Excel和一些其他的应用。
 
 ## Backtrader的默认配置
@@ -53,7 +53,7 @@ for i in range(STOCKS):
 让我们回顾一下Backtrader的默认运行时配置是什么：
 
 * 如果可能，请预加载所有数据馈送(data feeds)
-* 如果所有数据馈送均可以预先加载，请在批处理模式下运行（名为 `runonce`）
+* 如果所有数据馈送均可以预先加载，请在批处理模式下运行（名为runonce）
 * 首先，请预先计算所有指标
 * 以步进方式执行策略逻辑以及经纪人（的交易）
 
@@ -127,7 +127,7 @@ Length of data feeds:        20000
 
 Backtrader有几个用于执行回测的配置选项可以解决这些问题，包括【设置】优化缓冲区和仅使用所需的最少数据集【的选项】（理想情况下可以减少到只包含1根K线的缓存，但显然这只会在理想情况下，因为指标的计算不能只包括1根K线）
 
-要使用的选项是 `**exactbars=True**` 。（这是在实例化​`Cerebro`时或调用`run`函数时的参数）​`exactbars`文档如下：
+要使用的选项是 exactbars=True 。（这是在实例化​Cerebro时或调用run函数时的参数）​exactbars文档如下：
 
 ```
   `True` or `1`: all “lines” objects reduce memory usage to the
@@ -147,7 +147,7 @@ Backtrader有几个用于执行回测的配置选项可以解决这些问题，�
     使用这个设置也将禁用绘图。
 ```
 
-为了最大程度地优化，绘图将被禁用，因此还需要进行如下设置：`stdstats=False`。【stdstats这个选项设置为false】将禁用【Backtrader的】标准观察者【Observer】，【观察者主要用于观察回测中的现金、资产净值、交易等；这些信息对于绘图很有用，禁用后，这些信息将不再提供】。
+为了最大程度地优化，绘图将被禁用，因此还需要进行如下设置：stdstats=False。【stdstats这个选项设置为false】将禁用【Backtrader的】标准观察者【Observer】，【观察者主要用于观察回测中的现金、资产净值、交易等；这些信息对于绘图很有用，禁用后，这些信息将不再提供】。
 
 ```
 $ ./two-million-candles.py --cerebro exactbars=False,stdstats=False
@@ -183,9 +183,9 @@ Length of data feeds:        20000
 我们可以在程序代码中导入1亿根K线，内存消耗量仍将保持在75Mb；
 
 
-### 优化模式下使用 `pypy`运行
+### 优化模式下使用 pypy运行
 
-现在我们知道了如何优化，让使用 `pypy` 运行一次。
+现在我们知道了如何优化，让使用pypy运行一次。
 
 ```
 $ ./two-million-candles.py --cerebro exactbars=True,stdstats=False
@@ -218,6 +218,7 @@ Length of data feeds:        20000
 **注意**
 
 在pypy运行的场景下，批处理(runonce)模式消耗57.19秒，与一般模式相比，在运行时间方面并无提升。这是意料之中的，因为在预加载时，计算器指示是在矢量化模式下完成的，而这正是pypy的just-in-time编译器的优势所在。
+
 In this case `pypy` has not been able to beat its own time compared to the batch (`runonce`) mode, which was `57.19` seconds. This is to be expected, because when preloading, the calculator indications are done in **vectorized** mode and that's where the JIT of `pypy` excels
 
 无论如何，pypy仍然做得很好，并且在内存消耗方面有重要的改进
@@ -282,19 +283,19 @@ Length of data feeds:        20000
 
 性能数据：27,329根K线/秒
 
-内存使用：600 Mbytes（在优化后的exactbars模式下执行相同的操作只会消耗60 Mbytes内存，但执行时间会增加，`pypy` 无法进一步优化）
+内存使用：600 Mbytes（在优化后的exactbars模式下执行相同的操作只会消耗60 Mbytes内存，但执行时间会增加，pypy无法进一步优化）
 
 基于以上结果：交易发生时内存使用量确实会增加。原因是 `Order` 和 `Trade` 对象将由`broker`【经纪人实例】创建、传递及保存
 
 **注意**
 
-考虑到【本实验中的】数据集包含的是随机值，这会产生大量的【均线】交叉，因此`order`订单和`trade`交易的数量非常多。对于常规数据集，不应出现类似如此多的均线交叉。
+考虑到【本实验中的】数据集包含的是随机值，这会产生大量的【均线】交叉，因此order订单和trade交易的数量非常多。对于常规数据集，不应出现类似如此多的均线交叉。
 
 ## 结论
 
 ### 上述帖子中的陈述有误
 
-已通过上述方法证明reddit的两个帖子内的叙述不成立，通过我们的实验，Backtrader可以处理 160万根甚至更多的K线。
+已通过上述方法证明reddit的两个帖子内的叙述不成立，通过我们的实验，Backtrader可以处理160万根甚至更多的K线。
 
 ### General 通常情况
 
@@ -302,11 +303,11 @@ Length of data feeds:        20000
 2. Backtrader 可以在优化模式下运行回测【不对数据进行预加载】，【优化模式】将减少缓存将【内存占用】降到最低限度，优化模式下的K线数据大部分不在内存中。
 3. 在优化的非预加载模式下进行回测时，内存消耗的增加来自于【broker，经纪人】生成的各类管理信息【如order、trade】。
 4. 即使在交易过程中，要不断地计算指标，同时经纪人也在不断发出各类信息【可能阻碍程序运行速度】，Backtrader的处理速度仍是12473根K线/秒
-5. 尽可能地使用 `pypy` （例如，如果不需要绘图）
+5. 尽可能地使用 pypy（例如，如果不需要绘图）
 
 ### 使用 Python 和/或backtrader的几种情况
 
-基于 `pypy` 运行环境、启用交易、使用随机数据集（高于平时的交易数量）后，处理200万根K线耗费：
+基于 pypy 运行环境、启用交易、使用随机数据集（高于平时的交易数量）后，处理200万根K线耗费：
 
 * 156.94秒，即：2分37秒
 
@@ -337,7 +338,7 @@ Length of data feeds:        20000
 
 **提示**
 
-可以考虑使用类似 `dask` 包替换 `pandas`，用作核外内存执行。
+可以考虑使用类似 dask 包替换 pandas，用作核外内存执行。
 
 ## 测试脚本
 
