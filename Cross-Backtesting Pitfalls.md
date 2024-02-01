@@ -41,12 +41,12 @@ Another two definitions:
 These two references explicitly state, that the data for the calculation of the channel does not include the current bar, because if it did ... breakouts would not be reflected. Here is a sample chart from *StockCharts*
 **这两个参考文献明确指出，用于计算通道的数据不包括当前柱线，因为如果它确实包括【当日柱线的话】......【当日】突破就无法显示出来。这是来自StockCharts的示例图表**
 
-![!StockCharts - Donchian Channels- Breakouts](assets/stockcharts-donchian-breakouts-20240127225252-oehd17i.png)[https://www.backtrader.com/blog/posts/2019-09-04-donchian-across-platforms/stockcharts-donchian-breakouts.png](https://www.backtrader.com/blog/posts/2019-09-04-donchian-across-platforms/stockcharts-donchian-breakouts.png)
+![!StockCharts - Donchian Channels- Breakouts](https://www.backtrader.com/blog/posts/2019-09-04-donchian-across-platforms/stockcharts-donchian-breakouts.png)
 
 Going now to *TradingView*. First the link
 **现在转到TradingView。首先，链接如下**
 
-* [TradingView - Wiki - Donchian Channels   ](https://www.tradingview.com/wiki/Donchian_Channels_(DC))
+* [TradingView - Wiki - Donchian Channels](https://www.tradingview.com/wiki/Donchian_Channels_(DC))
 
 And a chart from that page.
 **还有该页面的图表。**
