@@ -4,44 +4,22 @@
 [https://www.backtrader.com/blog/2019-10-25-on-backtesting-performance-and-out-of-memory/on-backtesting-performance-and-out-of-memory/](https://www.backtrader.com/blog/2019-10-25-on-backtesting-performance-and-out-of-memory/on-backtesting-performance-and-out-of-memory/)
 
 
-
-There have been two recent [https://redit.com/r/algotrading](https://redit.com/r/algotrading) threads which are the inspiration for this article.
-
 本文主要是为了回应 [https://redit.com/r/algotrading](https://redit.com/r/algotrading) 最近的两个帖子。
 
-* A thread with a bogus claim that *backtrader* cannot cope with 1.6M candles: [reddit/r/algotrading - A performant backtesting system? ](https://www.reddit.com/r/algotrading/comments/dlfujr/a_performant_backtesting_system/)
-
-  其一是质疑Backtrader无法处理160万根K线
-  
-* And another one asking for something which can backtest a universe of 8000 stocks: [reddit/r/algotrading - Backtesting libs that supports 1000+ stocks?     ](https://www.reddit.com/r/algotrading/comments/dmv51t/backtesting_libs_that_supports_1000_stocks/)
-
-  另一个询问哪种工具可以同时回测8000只股票？
-  
-* With the author asking about a framework that can backtest '"out-of-core/memory" *,*   *&quot;because obviously it cannot load all this data into memory&quot;* 
-
-  作者想找到一个支持“内核/内存外”的回测框架，“因为数据量巨大，显然无法将所有数据加载到内存中”
-
-We'll be of course addressing these concepts with *backtrader*
+* 其一是质疑Backtrader无法处理160万根K线: [reddit/r/algotrading - A performant backtesting system? ](https://www.reddit.com/r/algotrading/comments/dlfujr/a_performant_backtesting_system/)
+* 另一个询问哪种工具可以回测8000只股票？: [reddit/r/algotrading - Backtesting libs that supports 1000+ stocks?     ](https://www.reddit.com/r/algotrading/comments/dmv51t/backtesting_libs_that_supports_1000_stocks/)  
+* 作者想找到一个支持“内核/内存外”的回测框架，“因为数据量巨大，显然无法将所有数据加载到内存中”
 
 本文中，我们将用Backtrader一起解决这些问题
 
-
-
-## The 2M Candles  两百万根K线
-
-In order to do this, the first thing is to generate that amount of candles. Given that the first poster talks about 77 stocks and 1.6M candles, this would amount to 20,779 candles per stock, so we'll do the following to have nice numbers
+##  两百万根K线
 
 为了做到这一点，第一件事是产生足够数量的K线数据。鉴于第一个帖子谈论的是 77 只股票和 160万根K线，这相当于每只股票约有20,779根K线，因此我们将执行以下操作以获得对应的数据
 
-* Generate candles for 100 stocks
-  为100只股票生成K线
-* Generate 20,000 candles per stock
-  每只股票产生20,000根K线
+* 为100只股票生成K线
+* 每只股票产生20,000根K线
 
-I.e.: 100 files totaling 2M candles.
 即：100 个文件，共 200万根K线。
-
-The script
 
 代码如下：
 
@@ -318,3 +296,246 @@ The performance: `12,743` candles/second
 
 The execution time has obviously increased (indicators + trading), but why the memory usage increase?
 执行时间明显增加了（指标+交易），但为什么内存使用量增加？
+
+Before reaching any conclusions, let's run it creating indicators but without trading
+在得出任何结论之前，我们运行它，创建指标，但不【调用经纪人】交易
+
+```
+$ ./two-million-candles.py --strat indicators=True
+Cerebro Start Time:          2019-10-26 09:05:55.967969
+Strat Init Time:             2019-10-26 09:06:44.072969
+Time Loading Data Feeds:     48.10
+Number of data feeds:        100
+Total indicators:            300
+Moving Average to be used:   SMA
+Indicators period 1:         10
+Indicators period 2:         50
+Strat Start Time:            2019-10-26 09:06:44.779971
+Pre-Next Start Time:         2019-10-26 09:06:59.208969
+Time Calculating Indicators: 14.43
+Next Start Time:             2019-10-26 09:06:59.360969
+Strat warm-up period Time:   0.15
+Time to Strat Next Logic:    63.39
+End Time:                    2019-10-26 09:07:09.151838
+Time in Strategy Next Logic: 9.79
+Total Time in Strategy:      9.94
+Total Time:                  73.18
+Length of data feeds:        20000
+```
+
+The performance: `27,329` candles/second
+性能： `27,329` 根K线/秒
+
+**Memory Usage**: `600 Mbytes` (doing the same in optimized `exactbars`mode consumes only `60 Mbytes`, but with an increase in the execution time as `pypy` itself cannot optimize so much)
+内存使用： `600 Mbytes` （在优化后的`exactbars`模式下执行相同的操作只会消耗 `60 Mbytes` 内存，但执行时间会增加，`pypy` 无法进一步优化）
+
+With that in the hand: **Memory usage increases really when trading**. The reason being that `Order` and `Trade` objects are created, passed around and kept by the broker.
+基于以上结果：交易发生时内存使用量确实会增加。原因是 `Order` 和 `Trade` 对象将由`broker`【经纪人实例】创建、传递及保存
+
+**Note 注意**
+
+Take into account that the data set contains random values, which generates a huge number of crossovers, hence an enourmous amounts of orders and trades. A similar behavior shall not be expected for a regular data set.
+考虑到【本实验中的】数据集包含的是随机值，这会产生大量的【均线】交叉，因此`order`订单和`trade`交易的数量非常多。对于常规数据集，不应出现类似如此多的均线交叉。
+
+## Conclusions  结论
+
+### The bogus claim  上述帖子中的陈述有误
+
+Already proven above as *bogus*, becase *backtrader*​**CAN** handle 1.6 million candles and more.
+已通过上述方法证明reddit的两个帖子内的叙述不成立，通过我们的实验，Backtrader可以处理 160万根甚至更多的K线。
+
+### General 通常情况
+
+1. *backtrader* can easily handle `2M` candles using the default configuration (with in-memory data pre-loading)
+    Backtrader 可以使用默认配置轻松处理200万根K线（预加载数据到内存）
+2. *backtrader* can operate in an non-preloading optimized mode reducing buffers to the minimum for out-of-core-memory backtesting
+    Backtrader 可以在优化模式下运行回测【不对数据进行预加载】，【优化模式】将减少缓存将【内存占用】降到最低限度，优化模式下的K线数据大部分不在内存中。
+3. When *backtesting* in optimized non-preloading mode, the increase in memory    consumption comes from the administrative overhead which the broker generates.
+    在优化的非预加载模式下进行回测时，内存消耗的增加来自于【broker，经纪人】生成的各类管理信息【如order、trade】。
+4. Even when the trading, using indicators and the broker getting constantly in the way, the performance is `12,473` candles/second
+    即使在交易过程中，要不断地计算指标，同时经纪人也在不断发出各类信息【可能阻碍程序运行速度】，Backtrader的处理速度仍是12473根K线/秒
+5. Use `pypy` where possible (for example if you don't need to plot)
+    尽可能地使用 `pypy` （例如，如果不需要绘图）
+
+### Using Python and/or *backtrader* for these cases 使用 Python 和/或backtrader的几种情况
+
+With `pypy`, trading enabled, and the random data set (higher than usual number of trades), the entire 2M bars was processed in a total of:
+基于 `pypy` 运行环境、启用交易、使用随机数据集（高于平时的交易数量）后，处理200万根K线耗费：
+
+* `156.94` seconds, i.e.: almost `2 minutes and 37 seconds`
+  `156.94` 秒，即：`2 minutes and 37 seconds`
+
+Taking into account that this is done in a laptop running multiple other things simultaneously, it can be concluded that `2M` bars can be done.
+考虑到这是在同时运行多个其他程序的笔记本电脑中完成的，可以得出结论，200万根K线可以正常完成。
+
+### What about the 8000 stocks scenario? 在8000个股票情况的场景下【Backtrader】如何？
+
+Execution time would have to be scaled by 80, hence:
+执行时间按80倍缩放，因此：
+
+* `12,560 seconds` (or almost `210 minutes` or `3 hours and 30 minutes`) would be needed to run this random set scenario.
+  在这个随机集的情景下，耗费`12,560 seconds` （或 `210 minutes` 或 `3 hours and 30 minutes` ）
+
+Even assuming a standard data set which would generate far less operations, one would still be talking of backtesting in **hours** (`3 or 4`)
+即使假设生成的标准数据集产生将较少的操作【均线交叉】，回测仍可能需要消耗3到4小时。
+
+Memory usage would also increase, when **trading** due to the broker actions, and would probably require **some** Gigabytes.
+**在交易时，由于经纪人的操作，内存使用量也会增加，并且可能需要几个G。**
+
+**Note 注意**
+
+One cannot here simply multiply by 80 again, because the sample scripts trades with random data and as often as possible. In any case the amount of RAM needed would be **IMPORTANT**
+**不能在其他场景下简单的乘以80，因为示例程序用的是随机数据进行交易【其一致性是可以保证的】。无论如何，【为程序预留】所需的内存是很重要的。**
+
+As such, a workflow with only *backtrader* as the research and backtesting tool would seem far fetched.
+**==因此，仅使用Backtrader作为【大规模数据的】研究和回测工具的工作流程似乎很牵强。==**
+
+## A Discussion about Workflows 关于工作流的讨论
+
+There are two standard workflows to consider when using *backtrader*
+使用Backtrader时，需要考虑两个标准工作流程
+
+* Do everything with `backtrader`, i.e.: research and backtesting all in one
+  第一种流程，研究和回测均使用Backtrader，即：研究和回测合二为一
+* Research with `pandas`, get the notion if the ideas are good and then backtest with `backtrader` to verify with as much as accuracy as possible, having possibly reduced huge data-sets to something more palatable for usual RAM scenarios.
+  第二种流程，先使用python pandas对【数据和策略】进行大致研究，了解【策略】想法是否正确；然后再使用Backtrader回测，以尽可能准确地进行验证；这样可以将庞大的数据集【导致的内存占用】减少到更适合于一般内存大小的场景。
+
+**Tip 提示**
+
+One can imagine replacing `pandas` with something like `dask` for out-of-core-memory execution
+可以考虑使用类似 `dask` 包替换 `pandas`，用作核外内存执行。
+
+## The Test Script  测试脚本
+
+Here the source code
+这里是源代码
+
+```python
+#!/usr/bin/env python
+# -*- coding: utf-8; py-indent-offset:4 -*-
+###############################################################################
+import argparse
+import datetime
+
+import backtrader as bt
+
+
+class St(bt.Strategy):
+    params = dict(
+        indicators=False,
+        indperiod1=10,
+        indperiod2=50,
+        indicator=bt.ind.SMA,
+        trade=False,
+    )
+
+    def __init__(self):
+        self.dtinit = datetime.datetime.now()
+        print('Strat Init Time:             {}'.format(self.dtinit))
+        loaddata = (self.dtinit - self.env.dtcerebro).total_seconds()
+        print('Time Loading Data Feeds:     {:.2f}'.format(loaddata))
+
+        print('Number of data feeds:        {}'.format(len(self.datas)))
+        if self.p.indicators:
+            total_ind = self.p.indicators * 3 * len(self.datas)
+            print('Total indicators:            {}'.format(total_ind))
+            indname = self.p.indicator.__name__
+            print('Moving Average to be used:   {}'.format(indname))
+            print('Indicators period 1:         {}'.format(self.p.indperiod1))
+            print('Indicators period 2:         {}'.format(self.p.indperiod2))
+
+            self.macross = {}
+            for d in self.datas:
+                ma1 = self.p.indicator(d, period=self.p.indperiod1)
+                ma2 = self.p.indicator(d, period=self.p.indperiod2)
+                self.macross[d] = bt.ind.CrossOver(ma1, ma2)
+
+    def start(self):
+        self.dtstart = datetime.datetime.now()
+        print('Strat Start Time:            {}'.format(self.dtstart))
+
+    def prenext(self):
+        if len(self.data0) == 1:  # only 1st time
+            self.dtprenext = datetime.datetime.now()
+            print('Pre-Next Start Time:         {}'.format(self.dtprenext))
+            indcalc = (self.dtprenext - self.dtstart).total_seconds()
+            print('Time Calculating Indicators: {:.2f}'.format(indcalc))
+
+    def nextstart(self):
+        if len(self.data0) == 1:  # there was no prenext
+            self.dtprenext = datetime.datetime.now()
+            print('Pre-Next Start Time:         {}'.format(self.dtprenext))
+            indcalc = (self.dtprenext - self.dtstart).total_seconds()
+            print('Time Calculating Indicators: {:.2f}'.format(indcalc))
+
+        self.dtnextstart = datetime.datetime.now()
+        print('Next Start Time:             {}'.format(self.dtnextstart))
+        warmup = (self.dtnextstart - self.dtprenext).total_seconds()
+        print('Strat warm-up period Time:   {:.2f}'.format(warmup))
+        nextstart = (self.dtnextstart - self.env.dtcerebro).total_seconds()
+        print('Time to Strat Next Logic:    {:.2f}'.format(nextstart))
+        self.next()
+
+    def next(self):
+        if not self.p.trade:
+            return
+
+        for d, macross in self.macross.items():
+            if macross > 0:
+                self.order_target_size(data=d, target=1)
+            elif macross < 0:
+                self.order_target_size(data=d, target=-1)
+
+    def stop(self):
+        dtstop = datetime.datetime.now()
+        print('End Time:                    {}'.format(dtstop))
+        nexttime = (dtstop - self.dtnextstart).total_seconds()
+        print('Time in Strategy Next Logic: {:.2f}'.format(nexttime))
+        strattime = (dtstop - self.dtprenext).total_seconds()
+        print('Total Time in Strategy:      {:.2f}'.format(strattime))
+        totaltime = (dtstop - self.env.dtcerebro).total_seconds()
+        print('Total Time:                  {:.2f}'.format(totaltime))
+        print('Length of data feeds:        {}'.format(len(self.data)))
+
+
+def run(args=None):
+    args = parse_args(args)
+
+    cerebro = bt.Cerebro()
+
+    datakwargs = dict(timeframe=bt.TimeFrame.Minutes, compression=15)
+    for i in range(args.numfiles):
+        dataname = 'candles{:02d}.csv'.format(i)
+        data = bt.feeds.GenericCSVData(dataname=dataname, **datakwargs)
+        cerebro.adddata(data)
+
+    cerebro.addstrategy(St, **eval('dict(' + args.strat + ')'))
+    cerebro.dtcerebro = dt0 = datetime.datetime.now()
+    print('Cerebro Start Time:          {}'.format(dt0))
+    cerebro.run(**eval('dict(' + args.cerebro + ')'))
+
+
+def parse_args(pargs=None):
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description=(
+            'Backtrader Basic Script'
+        )
+    )
+
+    parser.add_argument('--numfiles', required=False, default=100, type=int,
+                        help='Number of files to rea')
+
+    parser.add_argument('--cerebro', required=False, default='',
+                        metavar='kwargs', help='kwargs in key=value format')
+
+    parser.add_argument('--strat', '--strategy', required=False, default='',
+                        metavar='kwargs', help='kwargs in key=value format')
+
+
+    return parser.parse_args(pargs)
+
+
+if __name__ == '__main__':
+    run()
+```
